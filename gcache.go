@@ -14,8 +14,8 @@ import (
 // a ServerBootstrap for users
 type GCache struct {
 	groups   map[string]*group // which groups this node joined
-	registry registry.Registry
-	protocol protocol.Protocol
+	registry registry.Registry // aware of other nodes in the group
+	protocol protocol.Protocol // provide outside service and internal communication between nodes
 	self     string // addr of this node. eg: 200.198.131.111
 	err      error  // an error that occurs when setting parameters. It is deferred until the startup phase
 }
@@ -35,13 +35,13 @@ func (c *GCache) Group(name string, maxBytes int64, evictionAlgo string, timeout
 	case EvictionLru:
 		g.cache = cache.New(cache.NewLRU(), timeout, maxBytes)
 	default:
-		c.err = fmt.Errorf("eviction no support" + evictionAlgo)
+		c.err = fmt.Errorf("eviction algorithm no support " + evictionAlgo)
 	}
 	switch shardingAlgo {
 	case ShardingConsistenthash:
 		g.sharding = sharding.NewConsistentHash(100, nil)
 	default:
-		c.err = fmt.Errorf("sharding no support" + shardingAlgo)
+		c.err = fmt.Errorf("sharding algorithm no support " + shardingAlgo)
 	}
 	c.groups[name] = g
 	return c
